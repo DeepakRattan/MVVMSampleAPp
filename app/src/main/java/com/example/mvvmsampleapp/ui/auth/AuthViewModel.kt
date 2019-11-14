@@ -5,16 +5,25 @@ import androidx.lifecycle.ViewModel
 import com.example.mvvmsampleapp.data.repositories.UserRepository
 import com.example.mvvmsampleapp.util.ApiException
 import com.example.mvvmsampleapp.util.Coroutines
+import com.example.mvvmsampleapp.util.NoInternetException
 
 // This AuthViewModel will be used for both Login and SignUp Activity as the functionalities
 // are almost same
-class AuthViewModel : ViewModel() {
+// Using constructor injection here
+class AuthViewModel(
+    private val repository: UserRepository
+) : ViewModel() {
     //Get Email and password from UI
     var email: String? = null //Using null safety operator ? here
     var password: String? = null
 
+
     //Use AuthListener interface to return result to Activity(UI)
     var authListener: AuthListener? = null
+
+
+    //To observe the changes in local database
+    fun getLoggedInUser() = repository.getUser()
 
     fun onLoginButtonClick(view: View) {
         // ?. is Safe call operator
@@ -56,7 +65,14 @@ class AuthViewModel : ViewModel() {
             // that will perform the API request and return the response
 
             try {
-                val authResponse = UserRepository().userLogin(email!!, password!!)
+                /* It is not a good practice to create object of one class inside another class like we are creating object of
+                 UserRepository here.
+
+                 val authResponse = UserRepository().userLogin(email!!, password!!)
+
+                 */
+                // To solve the above mentioned issue ,we will inject the object using constructor .
+                val authResponse = repository.userLogin(email!!, password!!)
                 // If user is not null ,let block will be executed
 
                 //The let function is used to execute block of code, access its parameter
@@ -66,15 +82,19 @@ class AuthViewModel : ViewModel() {
 
                 authResponse.user?.let {
                     authListener?.onSuccess(it)
+
+                    // On successful login ,saving user data to local database
+                    repository.saveUser(it)
+
                     return@main
                 }
                 authListener?.onFailure(authResponse.message!!)
 
             } catch (e: ApiException) {
                 authListener?.onFailure(e.message!!)
+            } catch (e: NoInternetException) {
+                authListener?.onFailure(e.message!!)
             }
-
-
 
         }
 

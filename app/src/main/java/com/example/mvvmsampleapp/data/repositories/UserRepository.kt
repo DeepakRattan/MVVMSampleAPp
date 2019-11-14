@@ -2,16 +2,23 @@ package com.example.mvvmsampleapp.data.repositories
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.mvvmsampleapp.data.db.AppDatabase
+import com.example.mvvmsampleapp.data.db.entities.User
 import com.example.mvvmsampleapp.data.network.MyApi
 import com.example.mvvmsampleapp.data.network.SafeApiRequest
 import com.example.mvvmsampleapp.data.network.responses.AuthResponse
 
 import retrofit2.Response
 
-//Api call will be done here
-//Repository performs the API request
+// Api call will be done here
+// AppDatabase have to be used here
+// Repository performs the API request
 // UserRepository is the subclass of SafeApiRequest
-class UserRepository : SafeApiRequest() {
+
+// Note : Creating instance of a class inside another class is not allowed.Inject the object through constructor instead.
+// Using constructor injection in UserReposity .MyApi instance is injected using constructor
+class UserRepository(private val api: MyApi, private val db: AppDatabase) : SafeApiRequest() {
+
     // userLogin() function will be called inside the view model
 
     // API call without using Coroutine
@@ -20,7 +27,8 @@ class UserRepository : SafeApiRequest() {
         val loginResponse = MutableLiveData<String>()
         MyApi().userLogin(email, password)
             .enqueue(object : Callback<ResponseBody> {
-                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                override fun onFailure(call: Call<Res
+                ponseBody>, t: Throwable) {
                     loginResponse.value = t.message
                 }
 
@@ -53,7 +61,12 @@ class UserRepository : SafeApiRequest() {
 
 
     suspend fun userLogin(email: String, password: String): AuthResponse {
-        return apiRequest { MyApi().userLogin(email, password) }
+        return apiRequest { api.userLogin(email, password) }
 
     }
+
+    // Save user to database
+    suspend fun saveUser(user: User) = db.getUserDao().upsert(user)
+
+    fun getUser() = db.getUserDao().getUsers()
 }

@@ -15,8 +15,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun getUserDao(): UserDAO
 
     // to create AppDatabase
-    // object is like singleton
-    // companion like static
+    // companion object is like static in JAVA
     companion object {
         //volatile annotaion means the variable is immediately visible for all other threads
         @Volatile

@@ -17,7 +17,7 @@ interface UserDAO {
     //if there is some conflict i.e we are inserting the same id or same primary key again
     // We will override the currently saved user with the new one
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun upsert(user: User): Long
+    suspend fun upsert(user: User): Long
 
     //Query
     @Query("SELECT * FROM user WHERE uid=$CURRENT_USER_ID")

@@ -2,6 +2,7 @@ package com.example.mvvmsampleapp.data.network
 
 import android.content.Context
 import android.net.ConnectivityManager
+import com.example.mvvmsampleapp.util.NoInternetException
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -15,22 +16,23 @@ class NetworkConnectionInterceptor(
 
 
     //This function will intercept our network call
-    // chain instance is representing the request
-
+    // Inside chain instance we have request
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        if (!isInternetAvailable())
+            throw NoInternetException("Please check your internet exception")
+        return chain.proceed(chain.request())
 
     }
 
+    // To check whether network is available or not
     private fun isInternetAvailable(): Boolean {
-        // Casting is done using infix operator as in Kotlin
-
-        val connectivityManager =
+        var connectivityManager =
             applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityManager.activeNetworkInfo.also {
 
-            connectivityManager.activeNetwork.also {
-
-            }
-
+            return it != null && it.isConnected
+        }
     }
+
 }
